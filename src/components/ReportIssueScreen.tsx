@@ -575,11 +575,18 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
                   <span>Getting location...</span>
                 </div>
               ) : locationData ? (
-                <div className="location-success">
+                <div className={`location-success ${LocationService.getInstance().getLocationQuality(locationData.accuracy).quality}`}>
                   <span className="location-icon">📍</span>
-                  <span className="location-accuracy">
-                    {LocationService.getInstance().getAccuracyDescription(locationData.accuracy)}
-                  </span>
+                  <div className="location-details">
+                    <span className="location-accuracy">
+                      {LocationService.getInstance().getAccuracyDescription(locationData.accuracy)}
+                    </span>
+                    {locationData.accuracy > 1000 && (
+                      <span className="location-tip">
+                        💡 Try going outdoors for GPS
+                      </span>
+                    )}
+                  </div>
                 </div>
               ) : locationError ? (
                 <div className="location-error">
@@ -775,13 +782,18 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
                   <span className="coordinates">
                     {LocationService.getInstance().formatCoordinates(locationData.latitude, locationData.longitude)}
                   </span>
-                  <span className="accuracy">
-                    Accuracy: {LocationService.getInstance().getAccuracyDescription(locationData.accuracy)}
+                  <span className={`accuracy ${LocationService.getInstance().getLocationQuality(locationData.accuracy).quality}`}>
+                    {LocationService.getInstance().getAccuracyDescription(locationData.accuracy)}
                   </span>
                   <span className="timestamp">
                     {new Date(locationData.timestamp).toLocaleTimeString()}
                   </span>
                 </div>
+                {locationData.accuracy > 1000 && (
+                  <div className="location-quality-warning">
+                    💡 <strong>Tip:</strong> {LocationService.getInstance().getLocationQuality(locationData.accuracy).recommendation}
+                  </div>
+                )}
                 {locationData.nearbyLandmarks && locationData.nearbyLandmarks.length > 0 && (
                   <div className="nearby-landmarks">
                     <strong>Nearby:</strong> {locationData.nearbyLandmarks.join(', ')}

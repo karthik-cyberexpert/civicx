@@ -41,8 +41,8 @@ export class LocationService {
 
       const options: PositionOptions = {
         enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 30000 // 30 seconds cache
+        timeout: 30000, // Increased to 30 seconds for better GPS lock
+        maximumAge: 10000 // Reduced cache to 10 seconds for fresher location
       };
 
       navigator.geolocation.getCurrentPosition(
@@ -327,7 +327,42 @@ export class LocationService {
     if (accuracy <= 10) return 'High (±10m)';
     if (accuracy <= 20) return 'Good (±20m)';
     if (accuracy <= 50) return 'Fair (±50m)';
-    return `Low (±${Math.round(accuracy)}m)`;
+    if (accuracy <= 100) return 'Moderate (±100m)';
+    if (accuracy <= 500) return 'Low (±500m)';
+    if (accuracy <= 1000) return 'Poor (±1km)';
+    if (accuracy <= 10000) return 'Very Poor (±10km)';
+    return 'Network-based (±' + Math.round(accuracy/1000) + 'km)';
+  }
+
+  /**
+   * Get location quality assessment
+   */
+  public getLocationQuality(accuracy: number): { quality: string; description: string; recommendation: string } {
+    if (accuracy <= 20) {
+      return {
+        quality: 'excellent',
+        description: 'GPS-based location with high precision',
+        recommendation: 'Perfect for precise location tagging'
+      };
+    } else if (accuracy <= 100) {
+      return {
+        quality: 'good',
+        description: 'GPS-based location with good precision',
+        recommendation: 'Suitable for most location tagging needs'
+      };
+    } else if (accuracy <= 1000) {
+      return {
+        quality: 'fair',
+        description: 'Mixed GPS/Network location',
+        recommendation: 'May need to move outdoors for better accuracy'
+      };
+    } else {
+      return {
+        quality: 'poor',
+        description: 'Network-based location (WiFi/IP)',
+        recommendation: 'Go outdoors and enable GPS for better accuracy'
+      };
+    }
   }
 }
 

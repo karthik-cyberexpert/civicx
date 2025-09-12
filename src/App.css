@@ -19,17 +19,33 @@ body {
 .App {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  display: flex;
+  flex-direction: column;
 }
 
-/* Screen Container */
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 80px; /* Space for bottom navigation */
+}
+
+/* Screen Container - Enhanced for multiple mobile sizes */
 .screen {
-  max-width: 400px;
+  max-width: 100%;
   margin: 0 auto;
   min-height: 100vh;
   background: white;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow-x: hidden;
+  width: 100%;
+}
+
+/* Desktop and large tablets */
+@media (min-width: 768px) {
+  .screen {
+    max-width: 450px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
 }
 
 /* Header */
@@ -625,7 +641,7 @@ body {
   animation: slideUp 0.3s ease-out;
 }
 
-/* Responsive Design */
+/* Responsive Design - Enhanced for multiple mobile sizes */
 @media (max-width: 480px) {
   .content {
     padding: 20px 15px;
@@ -644,6 +660,19 @@ body {
     width: 100px;
     height: 100px;
     font-size: 40px;
+  }
+  
+  .form-input {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .report-card {
+    padding: 15px;
+  }
+  
+  .leaderboard-item {
+    padding: 12px;
   }
 }
 
@@ -1047,4 +1076,262 @@ body {
 /* Hidden input for file upload */
 .hidden-input {
   display: none;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e9ecef;
+  padding: 8px 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  height: 80px;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  transition: all 0.3s ease;
+  min-width: 60px;
+  border-radius: 12px;
+}
+
+.nav-item:hover {
+  background: #f8f9fa;
+  transform: translateY(-2px);
+}
+
+.nav-item.active {
+  background: #667eea;
+  color: white;
+}
+
+.nav-item.active:hover {
+  background: #5a67d8;
+}
+
+.nav-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.nav-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6c757d;
+  display: block;
+}
+
+.nav-item.active .nav-label {
+  color: white;
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 320px) {
+  /* Extra small phones */
+  .screen {
+    max-width: 100%;
+  }
+  
+  .content {
+    padding: 15px 12px;
+  }
+  
+  .header {
+    padding: 15px;
+  }
+  
+  .header h1 {
+    font-size: 20px;
+  }
+  
+  .greeting h2 {
+    font-size: 22px;
+  }
+  
+  .primary-button {
+    font-size: 14px;
+    padding: 16px;
+    min-height: 50px;
+  }
+  
+  .secondary-button {
+    font-size: 14px;
+    padding: 14px;
+    min-height: 48px;
+  }
+  
+  .nav-icon {
+    font-size: 18px;
+  }
+  
+  .nav-label {
+    font-size: 10px;
+  }
+  
+  .bottom-nav {
+    height: 70px;
+    padding: 5px 0;
+  }
+  
+  .app-content {
+    padding-bottom: 70px;
+  }
+}
+
+@media (min-width: 321px) and (max-width: 375px) {
+  /* Small phones (iPhone SE, etc.) */
+  .screen {
+    max-width: 100%;
+  }
+  
+  .content {
+    padding: 20px 15px;
+  }
+  
+  .greeting h2 {
+    font-size: 24px;
+  }
+  
+  .primary-button {
+    font-size: 16px;
+    padding: 18px;
+    min-height: 55px;
+  }
+}
+
+@media (min-width: 376px) and (max-width: 414px) {
+  /* Medium phones (iPhone 12, 13, etc.) */
+  .screen {
+    max-width: 100%;
+  }
+  
+  .content {
+    padding: 25px 20px;
+  }
+}
+
+@media (min-width: 415px) and (max-width: 480px) {
+  /* Large phones */
+  .screen {
+    max-width: 100%;
+  }
+  
+  .content {
+    padding: 30px 25px;
+  }
+}
+
+@media (min-width: 481px) {
+  /* Tablets and larger */
+  .screen {
+    max-width: 450px;
+    margin: 0 auto;
+  }
+  
+  .bottom-nav {
+    max-width: 450px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+  .header {
+    padding: 15px 20px;
+  }
+  
+  .header h1 {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+  
+  .header p {
+    font-size: 12px;
+  }
+  
+  .content {
+    padding: 20px;
+  }
+  
+  .greeting {
+    margin-bottom: 25px;
+  }
+  
+  .greeting h2 {
+    font-size: 22px;
+  }
+  
+  .button-grid {
+    gap: 15px;
+  }
+  
+  .primary-button {
+    padding: 15px;
+    min-height: 50px;
+  }
+  
+  .secondary-button {
+    padding: 13px;
+    min-height: 46px;
+  }
+  
+  .bottom-nav {
+    height: 65px;
+  }
+  
+  .app-content {
+    padding-bottom: 65px;
+  }
+  
+  .nav-icon {
+    font-size: 18px;
+    margin-bottom: 2px;
+  }
+  
+  .nav-label {
+    font-size: 10px;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2) {
+  .screen {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Ensure buttons remain accessible on smaller screens */
+@media (max-width: 360px) {
+  .nav-item {
+    min-width: 50px;
+    padding: 6px;
+  }
+}
+
+/* Remove back buttons from bottom nav screens */
+.screen.with-bottom-nav .back-button {
+  display: none;
+}
+
+/* Adjust content for screens that don't need back buttons */
+.header.main-screens {
+  padding-left: 20px;
 }

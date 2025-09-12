@@ -156,11 +156,8 @@ const MyReportsScreen: React.FC<MyReportsScreenProps> = ({ onNavigate }) => {
   }
 
   return (
-    <div className="screen fade-in">
-      <div className="header">
-        <button className="back-button" onClick={() => onNavigate('home')}>
-          ←
-        </button>
+    <div className="screen with-bottom-nav fade-in">
+      <div className="header main-screens">
         <h1>My Reports</h1>
         <p>Track your submissions</p>
       </div>

@@ -9,8 +9,8 @@ interface HomeScreenProps {
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ userName, userPoints, onNavigate }) => {
   return (
-    <div className="screen fade-in">
-      <div className="header">
+    <div className="screen with-bottom-nav fade-in">
+      <div className="header main-screens">
         <h1>Civix</h1>
         <p>Making your city better, together</p>
         <div className="points-display">
@@ -30,20 +30,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ userName, userPoints, onNavigat
             onClick={() => onNavigate('report')}
           >
             📸 Report an Issue
-          </button>
-          
-          <button 
-            className="secondary-button"
-            onClick={() => onNavigate('myReports')}
-          >
-            📋 My Reports
-          </button>
-          
-          <button 
-            className="secondary-button"
-            onClick={() => onNavigate('leaderboard')}
-          >
-            🏆 Leaderboard
           </button>
         </div>
         
@@ -70,14 +56,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ userName, userPoints, onNavigat
             </div>
           </div>
         </div>
-        
-        <button 
-          className="secondary-button"
-          onClick={() => onNavigate('profile')}
-          style={{marginTop: '20px'}}
-        >
-          👤 Profile & Verification
-        </button>
       </div>
     </div>
   );

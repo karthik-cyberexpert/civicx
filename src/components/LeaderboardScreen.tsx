@@ -38,11 +38,8 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onNavigate }) => 
   const currentUserRank = leaderboardUsers.findIndex(user => user.isCurrentUser) + 1;
 
   return (
-    <div className="screen fade-in">
-      <div className="header">
-        <button className="back-button" onClick={() => onNavigate('home')}>
-          ←
-        </button>
+    <div className="screen with-bottom-nav fade-in">
+      <div className="header main-screens">
         <h1>Leaderboard</h1>
         <p>Top community heroes</p>
       </div>
@@ -129,14 +126,6 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onNavigate }) => 
             <p style={{marginBottom: '8px'}}>📱 Complete verification: <strong>+50 points</strong></p>
           </div>
         </div>
-
-        <button 
-          className="primary-button"
-          onClick={() => onNavigate('report')}
-          style={{marginTop: '20px', width: '100%'}}
-        >
-          📸 Report Issue & Earn Points
-        </button>
       </div>
     </div>
   );

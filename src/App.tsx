@@ -47,7 +47,44 @@ function App() {
 
   return (
     <div className="App">
-      {renderScreen()}
+      <div className="app-content">
+        {renderScreen()}
+      </div>
+      
+      {/* Bottom Navigation */}
+      <nav className="bottom-nav">
+        <button 
+          className={`nav-item ${currentScreen === 'home' ? 'active' : ''}`}
+          onClick={() => setCurrentScreen('home')}
+        >
+          <span className="nav-icon">🏠</span>
+          <span className="nav-label">Home</span>
+        </button>
+        
+        <button 
+          className={`nav-item ${currentScreen === 'myReports' ? 'active' : ''}`}
+          onClick={() => setCurrentScreen('myReports')}
+        >
+          <span className="nav-icon">📋</span>
+          <span className="nav-label">Reports</span>
+        </button>
+        
+        <button 
+          className={`nav-item ${currentScreen === 'leaderboard' ? 'active' : ''}`}
+          onClick={() => setCurrentScreen('leaderboard')}
+        >
+          <span className="nav-icon">🏆</span>
+          <span className="nav-label">Leaderboard</span>
+        </button>
+        
+        <button 
+          className={`nav-item ${currentScreen === 'profile' ? 'active' : ''}`}
+          onClick={() => setCurrentScreen('profile')}
+        >
+          <span className="nav-icon">👤</span>
+          <span className="nav-label">Profile</span>
+        </button>
+      </nav>
     </div>
   );
 }

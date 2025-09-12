@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Screen } from '../App';
+import LocationService, { LocationData } from '../utils/locationUtils';
 
 interface ReportIssueScreenProps {
   onNavigate: (screen: Screen) => void;
@@ -23,6 +24,9 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
   const [selectedCategoryType, setSelectedCategoryType] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment'); // Track camera facing mode
+  const [locationData, setLocationData] = useState<LocationData | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -113,6 +117,23 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
 
   const handleCameraClick = async () => {
     try {
+      // Start loading location data immediately
+      setIsLoadingLocation(true);
+      setLocationError(null);
+      
+      // Get location data in background
+      LocationService.getInstance().getCompleteLocationData()
+        .then((location) => {
+          setLocationData(location);
+          setIsLoadingLocation(false);
+          console.log('Location data obtained:', location);
+        })
+        .catch((error) => {
+          console.error('Location error:', error);
+          setLocationError(error.message);
+          setIsLoadingLocation(false);
+        });
+      
       // Request camera access
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -224,6 +245,21 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
   }, [stream]);
 
   const handleGalleryClick = () => {
+    // Start loading location data when gallery is accessed
+    setIsLoadingLocation(true);
+    setLocationError(null);
+    
+    LocationService.getInstance().getCompleteLocationData()
+      .then((location) => {
+        setLocationData(location);
+        setIsLoadingLocation(false);
+      })
+      .catch((error) => {
+        console.error('Location error:', error);
+        setLocationError(error.message);
+        setIsLoadingLocation(false);
+      });
+    
     galleryInputRef.current?.click();
   };
 
@@ -530,6 +566,28 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
             >
               🔄
             </button>
+            
+            {/* Location Status Overlay */}
+            <div className="location-status-overlay">
+              {isLoadingLocation ? (
+                <div className="location-loading">
+                  <span className="location-spinner">📍</span>
+                  <span>Getting location...</span>
+                </div>
+              ) : locationData ? (
+                <div className="location-success">
+                  <span className="location-icon">📍</span>
+                  <span className="location-accuracy">
+                    {LocationService.getInstance().getAccuracyDescription(locationData.accuracy)}
+                  </span>
+                </div>
+              ) : locationError ? (
+                <div className="location-error">
+                  <span>📍</span>
+                  <span>Location unavailable</span>
+                </div>
+              ) : null}
+            </div>
           </div>
           
           <div className="camera-controls">
@@ -700,8 +758,61 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
         )}
 
         <div className="location-section">
-          <span className="location-icon">📍</span>
-          <span className="location-text">Your location detected automatically</span>
+          {isLoadingLocation ? (
+            <>
+              <span className="location-icon">📍</span>
+              <span className="location-text">Getting your precise location...</span>
+              <div className="location-spinner-inline">⏳</div>
+            </>
+          ) : locationData ? (
+            <>
+              <span className="location-icon">📍</span>
+              <div className="location-details">
+                <div className="location-main">
+                  {LocationService.getInstance().formatLocationDisplay(locationData)}
+                </div>
+                <div className="location-meta">
+                  <span className="coordinates">
+                    {LocationService.getInstance().formatCoordinates(locationData.latitude, locationData.longitude)}
+                  </span>
+                  <span className="accuracy">
+                    Accuracy: {LocationService.getInstance().getAccuracyDescription(locationData.accuracy)}
+                  </span>
+                  <span className="timestamp">
+                    {new Date(locationData.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
+                {locationData.nearbyLandmarks && locationData.nearbyLandmarks.length > 0 && (
+                  <div className="nearby-landmarks">
+                    <strong>Nearby:</strong> {locationData.nearbyLandmarks.join(', ')}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : locationError ? (
+            <>
+              <span className="location-icon error">📍</span>
+              <span className="location-text error">Location not available - {locationError}</span>
+              <button 
+                className="retry-location-btn"
+                onClick={() => {
+                  setIsLoadingLocation(true);
+                  setLocationError(null);
+                  LocationService.getInstance().getCompleteLocationData()
+                    .then(setLocationData)
+                    .catch((error) => setLocationError(error.message))
+                    .finally(() => setIsLoadingLocation(false));
+                }}
+              >
+                🔄 Retry
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="location-icon">📍</span>
+              <span className="location-text">Location will be detected automatically</span>
+            </>
+          )}
         </div>
 
         <div className="form-group">

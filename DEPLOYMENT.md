@@ -73,15 +73,27 @@ vercel --prod
 
 ## 🌐 Environment Variables
 
-Currently, the app doesn't require any environment variables. If you need to add API endpoints in the future, you can set them in your deployment platform:
+### Google Maps API
+The app now includes GPS location tagging functionality that requires Google Maps API.
+
+**API Key**: `AIzaSyDcuX-NYTvG27ulhP77GzDgJea-QPQsW5g`
+**Libraries**: Geometry, Places
+**Usage**: Reverse geocoding and nearby landmarks detection
+
+### For Production Deployment
+If you need to change the API key for production:
 
 ### Netlify
 - Go to Site Settings > Environment Variables
-- Add variables prefixed with `REACT_APP_`
+- Add `REACT_APP_GOOGLE_MAPS_API_KEY=your_api_key_here`
+- Update `public/index.html` to use the environment variable
 
 ### Vercel
 - Go to Project Settings > Environment Variables  
-- Add variables prefixed with `REACT_APP_`
+- Add `REACT_APP_GOOGLE_MAPS_API_KEY=your_api_key_here`
+- Update `public/index.html` to use the environment variable
+
+**Note**: The current implementation includes the API key directly in the HTML for immediate deployment. For production, consider using environment variables for better security.
 
 ## 📊 Performance Tips
 

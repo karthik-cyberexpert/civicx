@@ -997,6 +997,70 @@ body {
   object-fit: cover;
 }
 
+/* Camera Switch Button in Header */
+.camera-switch-button {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.camera-switch-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.camera-switch-button:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* Camera Switch Button Overlay */
+.camera-switch-overlay {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  z-index: 10;
+}
+
+.camera-switch-overlay:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.camera-switch-overlay:active {
+  transform: scale(0.95);
+}
+
+/* Camera Controls */
 .camera-controls {
   display: flex;
   gap: 15px;
@@ -1191,6 +1255,21 @@ body {
   .app-content {
     padding-bottom: 70px;
   }
+  
+  /* Camera switch button adjustments for small screens */
+  .camera-switch-button {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  
+  .camera-switch-overlay {
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
+    top: 10px;
+    right: 10px;
+  }
 }
 
 @media (min-width: 321px) and (max-width: 375px) {
@@ -1307,6 +1386,23 @@ body {
   
   .nav-label {
     font-size: 10px;
+  }
+  
+  /* Camera container adjustments for landscape */
+  .camera-container {
+    height: 250px;
+  }
+  
+  .camera-switch-button {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  
+  .camera-switch-overlay {
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
   }
 }
 

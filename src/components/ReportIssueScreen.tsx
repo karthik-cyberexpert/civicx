@@ -22,6 +22,7 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [selectedCategoryType, setSelectedCategoryType] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment'); // Track camera facing mode
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -115,7 +116,7 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
       // Request camera access
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: 'environment', // Use rear camera
+          facingMode: facingMode, // Use current facing mode
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
@@ -176,6 +177,41 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
       setStream(null);
     }
     setShowCamera(false);
+  };
+
+  const switchCamera = async () => {
+    // Stop current stream
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    
+    // Toggle facing mode
+    const newFacingMode = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(newFacingMode);
+    
+    try {
+      // Start new stream with switched camera
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: newFacingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      
+      setStream(mediaStream);
+      
+      // Set up video stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        videoRef.current.play();
+      }
+    } catch (error) {
+      console.error('Error switching camera:', error);
+      alert('Unable to switch camera. Please try again.');
+      // Revert to previous facing mode if switch fails
+      setFacingMode(facingMode);
+    }
   };
 
   // Cleanup camera stream on component unmount
@@ -463,6 +499,14 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
           </button>
           <h1>Take Photo</h1>
           <p>Position your camera and capture</p>
+          {/* Camera Switch Button */}
+          <button 
+            className="camera-switch-button"
+            onClick={switchCamera}
+            title={`Switch to ${facingMode === 'environment' ? 'front' : 'back'} camera`}
+          >
+            📷↻
+          </button>
         </div>
         
         <div className="content">
@@ -478,6 +522,14 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
               ref={canvasRef}
               style={{ display: 'none' }}
             />
+            {/* Camera Switch Button Overlay */}
+            <button 
+              className="camera-switch-overlay"
+              onClick={switchCamera}
+              title={`Switch to ${facingMode === 'environment' ? 'front' : 'back'} camera`}
+            >
+              🔄
+            </button>
           </div>
           
           <div className="camera-controls">

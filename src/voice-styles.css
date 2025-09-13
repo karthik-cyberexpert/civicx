@@ -1,0 +1,358 @@
+/* Voice Recording Styles */
+.description-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.description-toggle {
+  display: flex;
+  background: #f8f9fa;
+  border-radius: 20px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.toggle-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #6c757d;
+}
+
+.toggle-btn.active {
+  background: #667eea;
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.voice-input-section {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 120px;
+}
+
+.voice-input-options {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.voice-option {
+  text-align: center;
+}
+
+.voice-option h4 {
+  color: #2c3e50;
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.voice-option p {
+  color: #6c757d;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.voice-record-btn {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 160px;
+  margin: 0 auto;
+}
+
+.voice-record-btn.recording {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  animation: pulse-record 1.5s infinite;
+}
+
+.voice-record-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.voice-record-btn.recording:hover {
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.recording-indicator {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.5; }
+}
+
+@keyframes pulse-record {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.voice-transcript-btn {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 160px;
+  margin: 0 auto;
+}
+
+.voice-transcript-btn.transcribing {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  animation: pulse-transcribe 1.5s infinite;
+}
+
+.voice-transcript-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.voice-transcript-btn.transcribing:hover {
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.transcribing-indicator {
+  animation: wave 1.5s infinite;
+}
+
+@keyframes wave {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes pulse-transcribe {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.voice-divider {
+  text-align: center;
+  color: #95a5a6;
+  font-weight: 600;
+  font-size: 14px;
+  position: relative;
+  margin: 10px 0;
+}
+
+.voice-divider::before,
+.voice-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 35%;
+  height: 1px;
+  background: #dee2e6;
+}
+
+.voice-divider::before {
+  left: 0;
+}
+
+.voice-divider::after {
+  right: 0;
+}
+
+.voice-result {
+  text-align: center;
+}
+
+.audio-recording,
+.voice-transcript {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.audio-recording h4,
+.voice-transcript h4 {
+  color: #2c3e50;
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.audio-controls,
+.transcript-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.play-btn {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.play-btn:hover {
+  background: #2ecc71;
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+}
+
+.transcript-text {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #2c3e50;
+  min-height: 60px;
+  text-align: left;
+}
+
+.use-transcript-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.use-transcript-btn:hover {
+  background: #5a67d8;
+  transform: translateY(-1px);
+}
+
+.transcribing-status {
+  text-align: center;
+  padding: 20px;
+  background: white;
+  border: 2px solid #f39c12;
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.transcribing-animation {
+  font-size: 32px;
+  margin-bottom: 12px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.transcribing-status p {
+  color: #f39c12;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.live-transcript {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  color: #856404;
+  text-align: left;
+  min-height: 40px;
+}
+
+/* Responsive adjustments for voice features */
+@media (max-width: 480px) {
+  .description-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .toggle-btn {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .voice-input-options {
+    gap: 16px;
+  }
+  
+  .voice-record-btn,
+  .voice-transcript-btn {
+    min-width: 140px;
+    font-size: 13px;
+    padding: 10px 20px;
+  }
+  
+  .audio-controls,
+  .transcript-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .play-btn,
+  .delete-btn,
+  .use-transcript-btn {
+    font-size: 13px;
+    padding: 6px 14px;
+  }
+}

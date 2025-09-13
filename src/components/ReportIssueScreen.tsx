@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Screen } from '../App';
 import LocationService, { LocationData } from '../utils/locationUtils';
+import '../voice-styles.css';
 
 interface ReportIssueScreenProps {
   onNavigate: (screen: Screen) => void;
@@ -27,10 +28,20 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
   const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [showVoiceInput, setShowVoiceInput] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [useVoiceDescription, setUseVoiceDescription] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   // Available issue categories - no icons, compact list
   const availableCategories = [
@@ -241,8 +252,43 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
     };
-  }, [stream]);
+  }, [stream, audioUrl]);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-US';
+      
+      recognitionRef.current.onresult = (event: any) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+        if (finalTranscript) {
+          setVoiceTranscript(prev => prev + finalTranscript + ' ');
+        }
+      };
+      
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsTranscribing(false);
+      };
+      
+      recognitionRef.current.onend = () => {
+        setIsTranscribing(false);
+      };
+    }
+  }, []);
 
   const handleGalleryClick = () => {
     // Start loading location data when gallery is accessed
@@ -287,8 +333,11 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
   };
 
   const handleSubmit = async () => {
-    if (!selectedImage || !description.trim()) {
-      alert('Please add an image and description');
+    const hasTextDescription = description.trim();
+    const hasVoiceDescription = useVoiceDescription && (audioBlob || voiceTranscript.trim());
+    
+    if (!selectedImage || (!hasTextDescription && !hasVoiceDescription)) {
+      alert('Please add an image and description (text or voice)');
       return;
     }
 
@@ -304,6 +353,83 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
         onNavigate('myReports');
       }, 2000);
     }, 1500);
+  };
+
+  const startVoiceRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      const mediaRecorder = new MediaRecorder(stream);
+      const audioChunks: BlobPart[] = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+      
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        setAudioBlob(audioBlob);
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      alert('Microphone access denied or not available.');
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const playRecording = () => {
+    if (audioRef.current && audioUrl) {
+      audioRef.current.play();
+    }
+  };
+
+  const deleteRecording = () => {
+    setAudioBlob(null);
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+      setAudioUrl(null);
+    }
+    setVoiceTranscript('');
+  };
+
+  const startVoiceToText = () => {
+    if (recognitionRef.current) {
+      setIsTranscribing(true);
+      setVoiceTranscript('');
+      recognitionRef.current.start();
+    } else {
+      alert('Speech recognition is not supported in your browser.');
+    }
+  };
+
+  const stopVoiceToText = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsTranscribing(false);
+    }
+  };
+
+  const useTranscriptAsDescription = () => {
+    if (voiceTranscript.trim()) {
+      setDescription(voiceTranscript.trim());
+      setShowVoiceInput(false);
+      setUseVoiceDescription(false);
+    }
   };
 
   const confirmAICategory = () => {
@@ -828,22 +954,160 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
         </div>
 
         <div className="form-group">
-          <label>Short Description</label>
-          <textarea
-            className="form-input form-textarea"
-            placeholder="Write a short note about the issue..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          <div className="description-header">
+            <label>Description</label>
+            <div className="description-toggle">
+              <button
+                type="button"
+                className={`toggle-btn ${!useVoiceDescription ? 'active' : ''}`}
+                onClick={() => {
+                  setUseVoiceDescription(false);
+                  setShowVoiceInput(false);
+                }}
+              >
+                ✏️ Text
+              </button>
+              <button
+                type="button"
+                className={`toggle-btn ${useVoiceDescription ? 'active' : ''}`}
+                onClick={() => {
+                  setUseVoiceDescription(true);
+                  setShowVoiceInput(true);
+                }}
+              >
+                🎤 Voice
+              </button>
+            </div>
+          </div>
+          
+          {!useVoiceDescription ? (
+            <textarea
+              className="form-input form-textarea"
+              placeholder="Write a short note about the issue..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          ) : (
+            <div className="voice-input-section">
+              {!audioBlob && !voiceTranscript ? (
+                <div className="voice-input-options">
+                  <div className="voice-option">
+                    <h4>Record Audio</h4>
+                    <p>Record your voice description</p>
+                    <button
+                      type="button"
+                      className={`voice-record-btn ${isRecording ? 'recording' : ''}`}
+                      onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                    >
+                      {isRecording ? (
+                        <>
+                          <span className="recording-indicator">🔴</span>
+                          Stop Recording
+                        </>
+                      ) : (
+                        <>
+                          🎤 Start Recording
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  
+                  <div className="voice-divider">OR</div>
+                  
+                  <div className="voice-option">
+                    <h4>Voice to Text</h4>
+                    <p>Convert speech to text</p>
+                    <button
+                      type="button"
+                      className={`voice-transcript-btn ${isTranscribing ? 'transcribing' : ''}`}
+                      onClick={isTranscribing ? stopVoiceToText : startVoiceToText}
+                    >
+                      {isTranscribing ? (
+                        <>
+                          <span className="transcribing-indicator">🎙️</span>
+                          Stop Listening
+                        </>
+                      ) : (
+                        <>
+                          🎙️ Start Speaking
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="voice-result">
+                  {audioBlob && (
+                    <div className="audio-recording">
+                      <h4>Audio Recording</h4>
+                      <div className="audio-controls">
+                        <button type="button" className="play-btn" onClick={playRecording}>
+                          ▶️ Play
+                        </button>
+                        <button type="button" className="delete-btn" onClick={deleteRecording}>
+                          🗑️ Delete
+                        </button>
+                      </div>
+                      <audio ref={audioRef} src={audioUrl || undefined} />
+                    </div>
+                  )}
+                  
+                  {voiceTranscript && (
+                    <div className="voice-transcript">
+                      <h4>Voice Transcript</h4>
+                      <div className="transcript-text">
+                        {voiceTranscript}
+                      </div>
+                      <div className="transcript-controls">
+                        <button type="button" className="use-transcript-btn" onClick={useTranscriptAsDescription}>
+                          📝 Use as Text Description
+                        </button>
+                        <button type="button" className="delete-btn" onClick={deleteRecording}>
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {isTranscribing && (
+                <div className="transcribing-status">
+                  <div className="transcribing-animation">🎙️</div>
+                  <p>Listening... Speak now</p>
+                  {voiceTranscript && (
+                    <div className="live-transcript">
+                      {voiceTranscript}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <button
           className="primary-button"
           onClick={handleSubmit}
-          disabled={isSubmitting || !selectedImage || !description.trim()}
+          disabled={
+            isSubmitting || 
+            !selectedImage || 
+            (!description.trim() && !useVoiceDescription) ||
+            (useVoiceDescription && !audioBlob && !voiceTranscript.trim())
+          }
           style={{
-            opacity: isSubmitting || !selectedImage || !description.trim() ? 0.6 : 1,
-            cursor: isSubmitting || !selectedImage || !description.trim() ? 'not-allowed' : 'pointer',
+            opacity: (
+              isSubmitting || 
+              !selectedImage || 
+              (!description.trim() && !useVoiceDescription) ||
+              (useVoiceDescription && !audioBlob && !voiceTranscript.trim())
+            ) ? 0.6 : 1,
+            cursor: (
+              isSubmitting || 
+              !selectedImage || 
+              (!description.trim() && !useVoiceDescription) ||
+              (useVoiceDescription && !audioBlob && !voiceTranscript.trim())
+            ) ? 'not-allowed' : 'pointer',
             width: '100%',
             marginTop: '20px'
           }}

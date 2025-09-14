@@ -31,7 +31,6 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [showVoiceInput, setShowVoiceInput] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [useVoiceDescription, setUseVoiceDescription] = useState(false);
@@ -128,20 +127,22 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
 
   const handleCameraClick = async () => {
     try {
-      // Start loading location data immediately
+      // Clear any previous location data to force fresh fetch
+      setLocationData(null);
       setIsLoadingLocation(true);
       setLocationError(null);
       
-      // Get location data in background
+      // Start fresh location fetch in background
       LocationService.getInstance().getCompleteLocationData()
         .then((location) => {
           setLocationData(location);
           setIsLoadingLocation(false);
-          console.log('Location data obtained:', location);
+          console.log('Fresh high-accuracy location for camera:', location);
+          console.log('GPS Accuracy:', location.accuracy + 'm');
         })
         .catch((error) => {
-          console.error('Location error:', error);
-          setLocationError(error.message);
+          console.error('Camera location error:', error);
+          setLocationError(`Location Error: ${error.message}. Try moving outdoors for better GPS signal.`);
           setIsLoadingLocation(false);
         });
       
@@ -149,8 +150,8 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: facingMode, // Use current facing mode
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 1920, min: 1280 }, // Higher resolution for better quality
+          height: { ideal: 1080, min: 720 }
         }
       });
       
@@ -162,6 +163,7 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
         videoRef.current.srcObject = mediaStream;
         videoRef.current.play();
       }
+      
     } catch (error) {
       console.error('Error accessing camera:', error);
       alert('Camera access denied or not available. Using file picker as fallback.');
@@ -204,6 +206,13 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
   };
 
   const closeCamera = () => {
+    // Properly stop video and clean up
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+      videoRef.current.load(); // Reset the video element
+    }
+    
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
@@ -212,9 +221,15 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
   };
 
   const switchCamera = async () => {
-    // Stop current stream
+    // Stop current stream first
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
+    }
+    
+    // Clear the video source to prevent play() interruption
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.load(); // Reset the video element
     }
     
     // Toggle facing mode
@@ -222,21 +237,31 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
     setFacingMode(newFacingMode);
     
     try {
+      // Add a small delay to ensure cleanup is complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Start new stream with switched camera
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: newFacingMode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 1920, min: 1280 }, // Higher resolution for better quality
+          height: { ideal: 1080, min: 720 }
         }
       });
       
       setStream(mediaStream);
       
-      // Set up video stream
+      // Set up video stream with proper loading
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        videoRef.current.play();
+        // Wait for the video to be ready before playing
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current) {
+            videoRef.current.play().catch(error => {
+              console.warn('Video play failed:', error);
+            });
+          }
+        };
       }
     } catch (error) {
       console.error('Error switching camera:', error);
@@ -245,6 +270,28 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
       setFacingMode(facingMode);
     }
   };
+
+  // Auto-fetch location when component loads (like GPS cameras)
+  useEffect(() => {
+    const autoFetchLocation = async () => {
+      setIsLoadingLocation(true);
+      setLocationError(null);
+      
+      try {
+        const location = await LocationService.getInstance().getCompleteLocationData();
+        setLocationData(location);
+        console.log('Auto-fetched location on app load:', location);
+      } catch (error) {
+        console.error('Auto location fetch error:', error);
+        setLocationError((error as Error).message);
+      } finally {
+        setIsLoadingLocation(false);
+      }
+    };
+
+    // Auto-fetch location when component mounts
+    autoFetchLocation();
+  }, []);
 
   // Cleanup camera stream on component unmount
   useEffect(() => {
@@ -427,7 +474,6 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
   const useTranscriptAsDescription = () => {
     if (voiceTranscript.trim()) {
       setDescription(voiceTranscript.trim());
-      setShowVoiceInput(false);
       setUseVoiceDescription(false);
     }
   };
@@ -693,31 +739,52 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
               🔄
             </button>
             
-            {/* Location Status Overlay */}
+            {/* GPS Brand Indicator - Top Right */}
+            <div className="gps-brand">
+              <div className="gps-brand-icon">📍</div>
+              <span>GPS Map Camera</span>
+            </div>
+            
+            {/* Location Status Overlay - Bottom Right like GPS Map Camera */}
             <div className="location-status-overlay">
               {isLoadingLocation ? (
-                <div className="location-loading">
-                  <span className="location-spinner">📍</span>
-                  <span>Getting location...</span>
+                <div className="gps-camera-style">
+                  <div className="location-info">
+                    <div className="location-line">Acquiring GPS signal...</div>
+                    <div className="coordinates-line">Please wait for accurate location</div>
+                  </div>
                 </div>
               ) : locationData ? (
-                <div className={`location-success ${LocationService.getInstance().getLocationQuality(locationData.accuracy).quality}`}>
-                  <span className="location-icon">📍</span>
-                  <div className="location-details">
-                    <span className="location-accuracy">
-                      {LocationService.getInstance().getAccuracyDescription(locationData.accuracy)}
-                    </span>
-                    {locationData.accuracy > 1000 && (
-                      <span className="location-tip">
-                        💡 Try going outdoors for GPS
-                      </span>
+                <div className="gps-camera-style">
+                  <div className="location-info">
+                    <div className="location-line">
+                      {locationData.city}, {locationData.state}, {locationData.country}
+                    </div>
+                    {locationData.address && (
+                      <div className="location-line address">
+                        {locationData.address}
+                      </div>
+                    )}
+                    <div className="coordinates-line">
+                      {LocationService.getInstance().formatCoordinates(locationData.latitude, locationData.longitude)}
+                    </div>
+                    <div className="timestamp-line">
+                      {LocationService.getInstance().formatTimestamp(locationData.timestamp)}
+                    </div>
+                    {/* Show accuracy for debugging */}
+                    {locationData.accuracy > 50 && (
+                      <div className="timestamp-line" style={{color: '#ffaa00'}}>
+                        Accuracy: ±{Math.round(locationData.accuracy)}m
+                      </div>
                     )}
                   </div>
                 </div>
               ) : locationError ? (
-                <div className="location-error">
-                  <span>📍</span>
-                  <span>Location unavailable</span>
+                <div className="gps-camera-style">
+                  <div className="location-info">
+                    <div className="location-line">GPS Signal Weak</div>
+                    <div className="coordinates-line">Move outdoors for better signal</div>
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -894,7 +961,7 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
           {isLoadingLocation ? (
             <>
               <span className="location-icon">📍</span>
-              <span className="location-text">Getting your precise location...</span>
+              <span className="location-text">Getting precise GPS location...</span>
               <div className="location-spinner-inline">⏳</div>
             </>
           ) : locationData ? (
@@ -902,8 +969,13 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
               <span className="location-icon">📍</span>
               <div className="location-details">
                 <div className="location-main">
-                  {LocationService.getInstance().formatLocationDisplay(locationData)}
+                  {locationData.city}, {locationData.state}, {locationData.country}
                 </div>
+                {locationData.address && (
+                  <div className="location-address">
+                    {locationData.address}
+                  </div>
+                )}
                 <div className="location-meta">
                   <span className="coordinates">
                     {LocationService.getInstance().formatCoordinates(locationData.latitude, locationData.longitude)}
@@ -912,10 +984,10 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
                     {LocationService.getInstance().getAccuracyDescription(locationData.accuracy)}
                   </span>
                   <span className="timestamp">
-                    {new Date(locationData.timestamp).toLocaleTimeString()}
+                    {LocationService.getInstance().formatTimestamp(locationData.timestamp)}
                   </span>
                 </div>
-                {locationData.accuracy > 1000 && (
+                {locationData.accuracy > 100 && (
                   <div className="location-quality-warning">
                     💡 <strong>Tip:</strong> {LocationService.getInstance().getLocationQuality(locationData.accuracy).recommendation}
                   </div>
@@ -948,7 +1020,7 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
           ) : (
             <>
               <span className="location-icon">📍</span>
-              <span className="location-text">Location will be detected automatically</span>
+              <span className="location-text">GPS location will be detected automatically</span>
             </>
           )}
         </div>
@@ -962,7 +1034,6 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
                 className={`toggle-btn ${!useVoiceDescription ? 'active' : ''}`}
                 onClick={() => {
                   setUseVoiceDescription(false);
-                  setShowVoiceInput(false);
                 }}
               >
                 ✏️ Text
@@ -972,7 +1043,6 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
                 className={`toggle-btn ${useVoiceDescription ? 'active' : ''}`}
                 onClick={() => {
                   setUseVoiceDescription(true);
-                  setShowVoiceInput(true);
                 }}
               >
                 🎤 Voice

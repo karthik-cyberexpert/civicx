@@ -30,7 +30,7 @@ export class LocationService {
   }
 
   /**
-   * Get current position with high accuracy
+   * Get current position with GPS camera-level accuracy
    */
   public async getCurrentPosition(): Promise<GeolocationPosition> {
     return new Promise((resolve, reject) => {
@@ -39,14 +39,25 @@ export class LocationService {
         return;
       }
 
+      // GPS camera-level settings for maximum accuracy
       const options: PositionOptions = {
         enableHighAccuracy: true,
-        timeout: 30000, // Increased to 30 seconds for better GPS lock
-        maximumAge: 10000 // Reduced cache to 10 seconds for fresher location
+        timeout: 90000, // Extended to 90 seconds for better GPS satellite lock
+        maximumAge: 0 // No cache - always get fresh location
       };
 
+      // Try to get high accuracy position with longer timeout
       navigator.geolocation.getCurrentPosition(
-        (position) => resolve(position),
+        (position) => {
+          console.log('GPS Accuracy:', position.coords.accuracy + 'm');
+          // If accuracy is poor (>50m), try to get a better fix
+          if (position.coords.accuracy > 50) {
+            console.log('Accuracy poor, attempting to get better GPS fix...');
+            this.watchPositionForBetterAccuracy(resolve, reject, position);
+          } else {
+            resolve(position);
+          }
+        },
         (error) => {
           let errorMessage = 'Unknown geolocation error';
           switch (error.code) {
@@ -57,7 +68,7 @@ export class LocationService {
               errorMessage = 'Location information unavailable';
               break;
             case error.TIMEOUT:
-              errorMessage = 'Location request timeout';
+              errorMessage = 'Location request timeout - try moving outdoors for better GPS signal';
               break;
           }
           reject(new Error(errorMessage));
@@ -68,7 +79,60 @@ export class LocationService {
   }
 
   /**
-   * Reverse geocode coordinates to get detailed address information
+   * Watch position to get better accuracy like GPS cameras
+   */
+  private watchPositionForBetterAccuracy(
+    resolve: (position: GeolocationPosition) => void,
+    reject: (error: Error) => void,
+    fallbackPosition: GeolocationPosition
+  ): void {
+    let bestPosition = fallbackPosition;
+    let attempts = 0;
+    const maxAttempts = 15; // Increased attempts for better accuracy
+    
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        attempts++;
+        console.log(`GPS attempt ${attempts}: ${position.coords.accuracy}m accuracy`);
+        
+        // If this position is more accurate, use it
+        if (position.coords.accuracy < bestPosition.coords.accuracy) {
+          bestPosition = position;
+          console.log('Better GPS fix found:', position.coords.accuracy + 'm');
+        }
+        
+        // Stop watching if we get good accuracy or max attempts reached
+        if (position.coords.accuracy <= 10 || attempts >= maxAttempts) {
+          navigator.geolocation.clearWatch(watchId);
+          resolve(bestPosition);
+        }
+      },
+      (error) => {
+        navigator.geolocation.clearWatch(watchId);
+        // Return the best position we have so far, or reject if none
+        if (bestPosition) {
+          resolve(bestPosition);
+        } else {
+          reject(new Error('Failed to get accurate location'));
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0 // Always get fresh readings
+      }
+    );
+    
+    // Fallback timeout - return best position after 25 seconds
+    setTimeout(() => {
+      navigator.geolocation.clearWatch(watchId);
+      console.log('GPS watch timeout, using best position:', bestPosition.coords.accuracy + 'm');
+      resolve(bestPosition);
+    }, 25000);
+  }
+
+  /**
+   * Reverse geocode coordinates to get detailed address information like GPS cameras
    */
   public async reverseGeocode(lat: number, lng: number): Promise<LocationData> {
     return new Promise((resolve, reject) => {
@@ -80,34 +144,96 @@ export class LocationService {
       const geocoder = new window.google.maps.Geocoder();
       const latlng = new window.google.maps.LatLng(lat, lng);
 
-      geocoder.geocode({ location: latlng }, (results: any[], status: string) => {
-        if (status === 'OK' && results[0]) {
-          const result = results[0];
+      // Use multiple geocoding requests to get the most accurate location
+      geocoder.geocode({ 
+        location: latlng,
+        language: 'en',
+        region: 'IN' // Set region to India for better local results
+      }, (results: any[], status: string) => {
+        if (status === 'OK' && results && results.length > 0) {
+          console.log('Geocoding results:', results);
           
-          // Extract address components
-          let address = '';
-          let city = '';
-          let state = '';
+          // Find the most specific result (usually the first one)
+          let bestResult = results[0];
+          
+          // Look for sublocality or neighborhood results for more accuracy
+          for (const result of results) {
+            const types = result.types;
+            if (types.includes('sublocality') || 
+                types.includes('neighborhood') || 
+                types.includes('sublocality_level_1') ||
+                types.includes('premise')) {
+              bestResult = result;
+              break;
+            }
+          }
+          
+          console.log('Best geocoding result:', bestResult);
+          
+          // Extract detailed address components for GPS camera-style display
+          let streetNumber = '';
+          let route = '';
+          let sublocality = '';
+          let sublocalityLevel1 = '';
+          let sublocalityLevel2 = '';
+          let locality = '';
+          let administrativeAreaLevel2 = '';
+          let administrativeAreaLevel1 = '';
           let country = '';
           let postalCode = '';
+          let premise = '';
+          let subpremise = '';
 
-          result.address_components.forEach((component: any) => {
+          bestResult.address_components.forEach((component: any) => {
             const types = component.types;
             
             if (types.includes('street_number')) {
-              address = component.long_name + ' ';
+              streetNumber = component.long_name;
             } else if (types.includes('route')) {
-              address += component.long_name;
+              route = component.long_name;
+            } else if (types.includes('premise')) {
+              premise = component.long_name;
+            } else if (types.includes('subpremise')) {
+              subpremise = component.long_name;
+            } else if (types.includes('sublocality_level_1')) {
+              sublocalityLevel1 = component.long_name;
+            } else if (types.includes('sublocality_level_2')) {
+              sublocalityLevel2 = component.long_name;
+            } else if (types.includes('sublocality')) {
+              sublocality = component.long_name;
             } else if (types.includes('locality')) {
-              city = component.long_name;
+              locality = component.long_name;
+            } else if (types.includes('administrative_area_level_2')) {
+              administrativeAreaLevel2 = component.long_name;
             } else if (types.includes('administrative_area_level_1')) {
-              state = component.long_name;
+              administrativeAreaLevel1 = component.long_name;
             } else if (types.includes('country')) {
               country = component.long_name;
             } else if (types.includes('postal_code')) {
               postalCode = component.long_name;
             }
           });
+
+          // Build detailed address like GPS cameras - prioritize most specific location
+          let address = '';
+          if (premise) {
+            address += premise;
+            if (subpremise) address += `-${subpremise}`;
+            address += ' ';
+          }
+          if (streetNumber) address += `${streetNumber} `;
+          if (route) address += route;
+          
+          // Use the most specific city name available - prioritize sublocality
+          let city = sublocalityLevel1 || sublocality || locality || administrativeAreaLevel2 || '';
+          let state = administrativeAreaLevel1 || '';
+          
+          // If we have multiple locality levels, show them hierarchically
+          if (sublocalityLevel1 && locality && sublocalityLevel1 !== locality) {
+            city = `${sublocalityLevel1}, ${locality}`;
+          }
+          
+          console.log('Parsed location:', { city, state, country, address });
 
           const locationData: LocationData = {
             latitude: lat,
@@ -118,7 +244,7 @@ export class LocationService {
             state,
             country,
             postalCode,
-            formattedAddress: result.formatted_address,
+            formattedAddress: bestResult.formatted_address,
             timestamp: Date.now()
           };
 
@@ -286,11 +412,12 @@ export class LocationService {
   }
 
   /**
-   * Format location data for display
+   * Format location data for GPS camera-style display
    */
   public formatLocationDisplay(locationData: LocationData): string {
     const parts = [];
     
+    // Build address like GPS camera: Street, City, State, Country
     if (locationData.address) {
       parts.push(locationData.address);
     }
@@ -303,6 +430,10 @@ export class LocationService {
       parts.push(locationData.state);
     }
 
+    if (locationData.country) {
+      parts.push(locationData.country);
+    }
+
     let display = parts.join(', ');
     
     if (locationData.nearbyLandmarks && locationData.nearbyLandmarks.length > 0) {
@@ -313,10 +444,53 @@ export class LocationService {
   }
 
   /**
-   * Format coordinates for display
+   * Format coordinates with hemisphere indicators like GPS cameras
    */
   public formatCoordinates(lat: number, lng: number): string {
-    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    const latDir = lat >= 0 ? 'N' : 'S';
+    const lngDir = lng >= 0 ? 'E' : 'W';
+    return `Lat ${Math.abs(lat).toFixed(6)}°${latDir} Long ${Math.abs(lng).toFixed(6)}°${lngDir}`;
+  }
+
+  /**
+   * Format timestamp like GPS Map Camera
+   */
+  public formatTimestamp(timestamp: number): string {
+    const date = new Date(timestamp);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = date.getHours() >= 12 ? 'PM' : 'AM';
+    
+    // Get timezone offset
+    const timezoneOffset = date.getTimezoneOffset();
+    const tzHours = Math.floor(Math.abs(timezoneOffset) / 60);
+    const tzMinutes = Math.abs(timezoneOffset) % 60;
+    const tzSign = timezoneOffset <= 0 ? '+' : '-';
+    const timezone = `GMT ${tzSign}${String(tzHours).padStart(2, '0')}:${String(tzMinutes).padStart(2, '0')}`;
+    
+    return `${day}/${month}/${year} ${hours}:${minutes} ${ampm} ${timezone}`;
+  }
+
+  /**
+   * Get detailed location information like GPS cameras
+   */
+  public getDetailedLocationInfo(locationData: LocationData): {
+    address: string;
+    coordinates: string;
+    timestamp: string;
+    accuracy: string;
+    quality: string;
+  } {
+    return {
+      address: this.formatLocationDisplay(locationData),
+      coordinates: this.formatCoordinates(locationData.latitude, locationData.longitude),
+      timestamp: this.formatTimestamp(locationData.timestamp),
+      accuracy: this.getAccuracyDescription(locationData.accuracy),
+      quality: this.getLocationQuality(locationData.accuracy).quality
+    };
   }
 
   /**

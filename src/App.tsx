@@ -5,8 +5,9 @@ import ReportIssueScreen from './components/ReportIssueScreen';
 import MyReportsScreen from './components/MyReportsScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import ProfileScreen from './components/ProfileScreen';
+import CommunityScreen from './components/CommunityScreen';
 
-export type Screen = 'home' | 'report' | 'myReports' | 'leaderboard' | 'profile';
+export type Screen = 'home' | 'report' | 'myReports' | 'leaderboard' | 'profile' | 'community';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
@@ -30,6 +31,8 @@ function App() {
         return <MyReportsScreen onNavigate={setCurrentScreen} />;
       case 'leaderboard':
         return <LeaderboardScreen onNavigate={setCurrentScreen} />;
+      case 'community':
+        return <CommunityScreen onNavigate={setCurrentScreen} />;
       case 'profile':
         return <ProfileScreen 
           userName={userName}
@@ -67,6 +70,14 @@ function App() {
         >
           <span className="nav-icon">📋</span>
           <span className="nav-label">Reports</span>
+        </button>
+        
+        <button 
+          className={`nav-item ${currentScreen === 'community' ? 'active' : ''}`}
+          onClick={() => setCurrentScreen('community')}
+        >
+          <span className="nav-icon">🤝</span>
+          <span className="nav-label">Community</span>
         </button>
         
         <button 

@@ -260,7 +260,6 @@ export class LocationService {
           let route = '';
           let sublocality = '';
           let sublocalityLevel1 = '';
-          let sublocalityLevel2 = '';
           let locality = '';
           let administrativeAreaLevel2 = '';
           let administrativeAreaLevel1 = '';
@@ -285,8 +284,6 @@ export class LocationService {
               subpremise = longName;
             } else if (types.includes('sublocality_level_1')) {
               sublocalityLevel1 = longName;
-            } else if (types.includes('sublocality_level_2')) {
-              sublocalityLevel2 = longName;
             } else if (types.includes('sublocality')) {
               sublocality = longName;
             } else if (types.includes('locality')) {

@@ -7,6 +7,10 @@
 [build.environment]
   # Node.js version
   NODE_VERSION = "18"
+  # NPM version
+  NPM_VERSION = "8.19.2"
+  # Specify that we're using npm (not yarn or pnpm)
+  NPM_FLAGS = "--prefer-offline"
 
 # Redirect rules for SPA (Single Page Application)
 [[redirects]]

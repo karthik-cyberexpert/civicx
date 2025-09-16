@@ -1,9 +1,15 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import App from './App';
+import '@testing-library/jest-dom';
+import AppWrapper from './AppWrapper';
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test('renders home screen with navigation', () => {
+  render(<AppWrapper />);
+  // Check for home screen elements
+  const civixElement = screen.getByText(/Civix/i);
+  expect(civixElement).toBeInTheDocument();
+  
+  // Check for navigation elements
+  const homeNavElement = screen.getByText(/Home/i);
+  expect(homeNavElement).toBeInTheDocument();
 });

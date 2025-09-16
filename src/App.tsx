@@ -6,6 +6,7 @@ import MyReportsScreen from './components/MyReportsScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import ProfileScreen from './components/ProfileScreen';
 import CommunityScreen from './components/CommunityScreen';
+import { useAuth } from './contexts/AuthContext';
 
 export type Screen = 'home' | 'report' | 'myReports' | 'leaderboard' | 'profile' | 'community';
 
@@ -13,6 +14,7 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [userPoints, setUserPoints] = useState(125);
   const [userName] = useState('Alex');
+  const { logout } = useAuth();
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -50,12 +52,14 @@ function App() {
 
   return (
     <div className="App">
-      <div className="app-content">
-        {renderScreen()}
-      </div>
-      
-      {/* Bottom Navigation */}
+      {/* Side Navigation Panel */}
       <nav className="bottom-nav">
+        <div className="sidebar-header">
+          <h2 style={{ color: 'white', padding: '0 25px 20px', fontSize: '24px', fontWeight: 'bold' }}>
+            Civix
+          </h2>
+        </div>
+        
         <button 
           className={`nav-item ${currentScreen === 'home' ? 'active' : ''}`}
           onClick={() => setCurrentScreen('home')}
@@ -65,11 +69,19 @@ function App() {
         </button>
         
         <button 
+          className={`nav-item ${currentScreen === 'report' ? 'active' : ''}`}
+          onClick={() => setCurrentScreen('report')}
+        >
+          <span className="nav-icon">📸</span>
+          <span className="nav-label">Report Issue</span>
+        </button>
+        
+        <button 
           className={`nav-item ${currentScreen === 'myReports' ? 'active' : ''}`}
           onClick={() => setCurrentScreen('myReports')}
         >
           <span className="nav-icon">📋</span>
-          <span className="nav-label">Reports</span>
+          <span className="nav-label">My Reports</span>
         </button>
         
         <button 
@@ -96,6 +108,18 @@ function App() {
           <span className="nav-label">Profile</span>
         </button>
       </nav>
+      
+      {/* Top bar with logout button */}
+      <div className="top-bar">
+        <button className="logout-button" onClick={logout}>
+          Logout
+        </button>
+      </div>
+      
+      {/* Main content area */}
+      <div className="app-content">
+        {renderScreen()}
+      </div>
     </div>
   );
 }

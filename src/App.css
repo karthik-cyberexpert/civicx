@@ -2516,3 +2516,38 @@ body {
   margin-bottom: 15px;
   line-height: 1.5;
 }
+
+/* Camera Error Message */
+.camera-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.camera-error p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.dismiss-error-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.dismiss-error-btn:hover {
+  background: #dc2626;
+}

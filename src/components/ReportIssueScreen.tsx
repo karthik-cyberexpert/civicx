@@ -28,6 +28,7 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
   const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -126,6 +127,7 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
   ];
 
   const handleCameraClick = async () => {
+    setCameraError(null); // Reset error on new attempt
     try {
       // Clear any previous location data to force fresh fetch
       setLocationData(null);
@@ -166,11 +168,24 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
       
     } catch (error) {
       console.error('Error accessing camera:', error);
-      alert('Camera access denied or not available. Using file picker as fallback.');
-      // Fallback to file picker
-      if (fileInputRef.current) {
-        fileInputRef.current.click();
+      let message = 'Could not access the camera. Please ensure it is not being used by another application.';
+      if (error instanceof DOMException) {
+        switch (error.name) {
+          case 'NotAllowedError':
+          case 'PermissionDeniedError':
+            message = 'Camera access denied. To use the camera, please enable permissions in your browser settings and refresh the page.';
+            break;
+          case 'NotFoundError':
+          case 'DevicesNotFoundError':
+            message = 'No camera was found on your device. You can select an image from your gallery instead.';
+            break;
+          case 'NotReadableError':
+          case 'TrackStartError':
+            message = 'The camera is currently in use by another application. Please close it and try again.';
+            break;
+        }
       }
+      setCameraError(message);
     }
   };
 
@@ -840,6 +855,17 @@ const ReportIssueScreen: React.FC<ReportIssueScreenProps> = ({ onNavigate, onSub
       <div className="content">
         {!selectedImage ? (
           <div className="camera-section">
+            {cameraError && (
+              <div className="error-message camera-error">
+                <p>{cameraError}</p>
+                <button 
+                  className="dismiss-error-btn"
+                  onClick={() => setCameraError(null)}
+                >
+                  Got it
+                </button>
+              </div>
+            )}
             <button className="camera-button" onClick={handleCameraClick}>
               📷
             </button>

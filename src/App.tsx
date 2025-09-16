@@ -52,64 +52,83 @@ function App() {
 
   return (
     <div className="App">
-      {/* Side Navigation Panel */}
+      {/* Side/Bottom Navigation Panel */}
       <nav className="bottom-nav">
         <div className="sidebar-header">
-          <h2 style={{ color: 'white', padding: '0 25px 20px', fontSize: '24px', fontWeight: 'bold' }}>
+          <div className="sidebar-logo">
+            <span role="img" aria-label="logo">🛡️</span>
             Civix
-          </h2>
+          </div>
         </div>
         
-        <button 
-          className={`nav-item ${currentScreen === 'home' ? 'active' : ''}`}
-          onClick={() => setCurrentScreen('home')}
-        >
-          <span className="nav-icon">🏠</span>
-          <span className="nav-label">Home</span>
-        </button>
-        
-        <button 
-          className={`nav-item ${currentScreen === 'report' ? 'active' : ''}`}
-          onClick={() => setCurrentScreen('report')}
-        >
-          <span className="nav-icon">📸</span>
-          <span className="nav-label">Report Issue</span>
-        </button>
-        
-        <button 
-          className={`nav-item ${currentScreen === 'myReports' ? 'active' : ''}`}
-          onClick={() => setCurrentScreen('myReports')}
-        >
-          <span className="nav-icon">📋</span>
-          <span className="nav-label">My Reports</span>
-        </button>
-        
-        <button 
-          className={`nav-item ${currentScreen === 'community' ? 'active' : ''}`}
-          onClick={() => setCurrentScreen('community')}
-        >
-          <span className="nav-icon">🤝</span>
-          <span className="nav-label">Community</span>
-        </button>
-        
-        <button 
-          className={`nav-item ${currentScreen === 'leaderboard' ? 'active' : ''}`}
-          onClick={() => setCurrentScreen('leaderboard')}
-        >
-          <span className="nav-icon">🏆</span>
-          <span className="nav-label">Leaderboard</span>
-        </button>
-        
-        <button 
-          className={`nav-item ${currentScreen === 'profile' ? 'active' : ''}`}
-          onClick={() => setCurrentScreen('profile')}
-        >
-          <span className="nav-icon">👤</span>
-          <span className="nav-label">Profile</span>
-        </button>
+        <div className="nav-items-container">
+          <button 
+            className={`nav-item ${currentScreen === 'home' ? 'active' : ''}`}
+            onClick={() => setCurrentScreen('home')}
+          >
+            <span className="nav-icon">🏠</span>
+            <span className="nav-label">Home</span>
+          </button>
+          
+          <button 
+            className={`nav-item ${currentScreen === 'report' ? 'active' : ''}`}
+            onClick={() => setCurrentScreen('report')}
+          >
+            <span className="nav-icon">📸</span>
+            <span className="nav-label">Report Issue</span>
+          </button>
+          
+          <button 
+            className={`nav-item ${currentScreen === 'myReports' ? 'active' : ''}`}
+            onClick={() => setCurrentScreen('myReports')}
+          >
+            <span className="nav-icon">📋</span>
+            <span className="nav-label">My Reports</span>
+          </button>
+          
+          <button 
+            className={`nav-item ${currentScreen === 'community' ? 'active' : ''}`}
+            onClick={() => setCurrentScreen('community')}
+          >
+            <span className="nav-icon">🤝</span>
+            <span className="nav-label">Community</span>
+          </button>
+          
+          <button 
+            className={`nav-item ${currentScreen === 'leaderboard' ? 'active' : ''}`}
+            onClick={() => setCurrentScreen('leaderboard')}
+          >
+            <span className="nav-icon">🏆</span>
+            <span className="nav-label">Leaderboard</span>
+          </button>
+          
+          <button 
+            className={`nav-item ${currentScreen === 'profile' ? 'active' : ''}`}
+            onClick={() => setCurrentScreen('profile')}
+          >
+            <span className="nav-icon">👤</span>
+            <span className="nav-label">Profile</span>
+          </button>
+        </div>
+
+        <div className="sidebar-footer">
+          <div className="sidebar-profile">
+            <div className="sidebar-avatar">
+              {userName.charAt(0)}
+            </div>
+            <div className="sidebar-user-info">
+              <span className="sidebar-username">{userName}</span>
+              <span className="sidebar-user-points">{userPoints} points</span>
+            </div>
+          </div>
+          <button className="sidebar-logout-button" onClick={logout}>
+            <span className="nav-icon">🚪</span>
+            <span className="nav-label">Logout</span>
+          </button>
+        </div>
       </nav>
       
-      {/* Top bar with logout button */}
+      {/* Top bar with logout button for mobile */}
       <div className="top-bar">
         <button className="logout-button" onClick={logout}>
           Logout

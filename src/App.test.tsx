@@ -1,15 +1,17 @@
+/// <reference types="@testing-library/jest-dom" />
+
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
 import AppWrapper from './AppWrapper';
 
-test('renders home screen with navigation', () => {
+test('renders login screen for unauthenticated user', () => {
   render(<AppWrapper />);
-  // Check for home screen elements
-  const civixElement = screen.getByText(/Civix/i);
-  expect(civixElement).toBeInTheDocument();
   
-  // Check for navigation elements
-  const homeNavElement = screen.getByText(/Home/i);
-  expect(homeNavElement).toBeInTheDocument();
+  // By default, the user is not authenticated and should see the login screen.
+  const loginTitle = screen.getByText(/Welcome Back/i);
+  expect(loginTitle).toBeInTheDocument();
+  
+  // Check that elements from the main app are not present
+  const homeScreenTitle = screen.queryByText(/Making your city better, together/i);
+  expect(homeScreenTitle).not.toBeInTheDocument();
 });

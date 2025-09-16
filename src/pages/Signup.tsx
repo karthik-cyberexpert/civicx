@@ -132,7 +132,7 @@ const Signup: React.FC = () => {
       const suggestions = generateUsernameSuggestions(username);
       setUsernameSuggestions(suggestions);
     }
-  }, []);
+  }, [existingUsernames, generateUsernameSuggestions]);
 
   const validateEmailOrMobile = (value: string) => {
     if (!value.trim()) {
